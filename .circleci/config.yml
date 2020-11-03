@@ -2,6 +2,7 @@ version: 2.1
 
 orbs:
   stackhawk: stackhawk/stackhawk@1.0.1
+  secrethub: secrethub/cli@1.1.0
 
 workflows:
   build-and-scan:
@@ -10,6 +11,10 @@ workflows:
           configuration-files: ./stackhawk.yml ./stackhawk-circleci.yml
           docker-network: scan_net
           app-id: 685847dd-0a74-4f02-b4d2-53f2396c93ed
+          pre-steps:
+            - secrethub/env-export:
+                var-name: HAWK_API_KEY
+                secret-path: webinar/appsec/stackhawk/api_key
           steps:
             - run:
                 name: Build Vulnarable Django
