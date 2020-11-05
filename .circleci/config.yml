@@ -6,6 +6,8 @@ orbs:
 
 jobs:
   fossa_test:
+    environment:
+      FOSSA_API_KEY: secrethub://webinar/appsec/fossa/api_key
     docker:
       - image: circleci/golang:1
     steps:
@@ -14,9 +16,11 @@ jobs:
           name: Install FOSSA cli
           command: |
             curl -H 'Cache-Control: no-cache' https://raw.githubusercontent.com/fossas/fossa-cli/master/install.sh | bash
-      - run:
+      - secrethub/exec:
+          step-name: FOSSA Analyze
           command: /usr/local/bin/fossa --no-ansi
-      - run:
+      - secrethub/exec:
+          step-name: FOSSA Test
           command: /usr/local/bin/fossa test --no-ansi
   deploy-application:
     working_directory: ~/project
