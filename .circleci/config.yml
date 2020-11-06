@@ -21,7 +21,7 @@ jobs:
           command: /usr/local/bin/fossa --no-ansi
       - secrethub/exec:
           step-name: FOSSA Test
-          command: /usr/local/bin/fossa test --no-ansi
+          command: /usr/local/bin/fossa test --no-ansi --suppress-issues
   deploy-application:
     working_directory: ~/project
     machine: true
