@@ -29,16 +29,21 @@ jobs:
       HEROKU_API_KEY: secrethub://webinar/appsec/heroku/api_key
     steps:
     - checkout
-
+    - attach_workspace:
+          at: ~/project
     - secrethub/exec:
         step-name: Setup Heroku CLI
         command: chmod +x scripts/setup_herokucli.sh && scripts/setup_herokucli.sh
-
+    - run:
+        name: Load Docker image from tar file
+        command: docker load --input image.tar
+    - secrethub/exec:
+        step-name: Deploy application
+        command: chmod +x scripts/deploy.sh && scripts/deploy.sh
 
 workflows:
   build-and-scan:
     jobs:
-      - deploy-application
       - fossa_test
       - stackhawk/hawkscan-local:
           configuration-files: ./stackhawk.yml ./stackhawk-circleci.yml
@@ -61,3 +66,10 @@ workflows:
             - run:
                 name: Export Docker image as tar file
                 command: docker save vuln_django:latest > image.tar
+            - persist_to_workspace:
+                  root: ~/project
+                  paths:
+                    - image.tar
+      - deploy-application:
+          requires:
+            - stackhawk/hawkscan-local
