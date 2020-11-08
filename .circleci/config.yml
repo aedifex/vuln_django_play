@@ -3,6 +3,8 @@ version: 2.1
 orbs:
   stackhawk: stackhawk/stackhawk@1.0.1
   secrethub: secrethub/cli@1.1.0
+  aws-eks: circleci/aws-eks@0.2.3
+  kubernetes: circleci/kubernetes@0.4.0
 
 jobs:
   fossa_test:
@@ -23,53 +25,63 @@ jobs:
           step-name: FOSSA Test
           command: /usr/local/bin/fossa test --no-ansi --suppress-issues
   deploy-application:
-    working_directory: ~/project
-    machine: true
-    environment:
-      HEROKU_API_KEY: secrethub://webinar/appsec/heroku/api_key
+    executor: aws-eks/python3
+    parameters:
+      cluster-name:
+        description: |
+          Name of the EKS cluster
+        type: string
+      aws-region:
+        description: |
+          Region in which resources are deployed
+        type: string
     steps:
-    - checkout
-    - attach_workspace:
-          at: ~/project
-    - secrethub/exec:
-        step-name: Setup Heroku CLI
-        command: chmod +x scripts/setup_herokucli.sh && scripts/setup_herokucli.sh
-    - run:
-        name: Load Docker image from tar file
-        command: docker load --input image.tar
-    - secrethub/exec:
-        step-name: Deploy application
-        command: chmod +x scripts/deploy.sh && scripts/deploy.sh
+      - checkout
+      - kubernetes/install
+      - aws-eks/update-kubeconfig-with-authenticator:
+          cluster-name: << parameters.cluster-name >>
+          aws-region: << parameters.aws-region>>
+      - run:
+          name: Test cluster
+          command: |
+            kubectl get services
+      - run:
+          name: Install envar utility (envsubst)
+          command: sudo apt-get install gettext-base
+      - run:
+          name: Update Cluster
+          command: |
+            kubectl apply -f yaml/hello-webinar.yaml --validate=false
 
 workflows:
   build-and-scan:
     jobs:
-      - fossa_test
-      - stackhawk/hawkscan-local:
-          configuration-files: ./stackhawk.yml ./stackhawk-circleci.yml
-          docker-network: scan_net
-          app-id: a629eeae-4bb9-4918-b3eb-bb141b4e8918
-          pre-steps:
-            - secrethub/env-export:
-                var-name: HAWK_API_KEY
-                secret-path: webinar/appsec/stackhawk/api_key
-          steps:
-            - run:
-                name: Build Vulnarable Django
-                command: docker build -t vuln_django:latest .
-            - run:
-                name: Create scan_net Network
-                command: docker network create scan_net
-            - run:
-                name: Run Vulny Django
-                command: docker run --detach --network scan_net --name vuln-django --rm vuln_django:latest
-            - run:
-                name: Export Docker image as tar file
-                command: docker save vuln_django:latest > image.tar
-            - persist_to_workspace:
-                  root: ~/project
-                  paths:
-                    - image.tar
+      # - fossa_test
+      # - stackhawk/hawkscan-local:
+      #     configuration-files: ./stackhawk.yml ./stackhawk-circleci.yml
+      #     docker-network: scan_net
+      #     app-id: a629eeae-4bb9-4918-b3eb-bb141b4e8918
+      #     pre-steps:
+      #       - secrethub/env-export:
+      #           var-name: HAWK_API_KEY
+      #           secret-path: webinar/appsec/stackhawk/api_key
+      #     steps:
+      #       - run:
+      #           name: Build Vulnarable Django
+      #           command: docker build -t vuln_django:latest .
+      #       - run:
+      #           name: Create scan_net Network
+      #           command: docker network create scan_net
+      #       - run:
+      #           name: Run Vulny Django
+      #           command: docker run --detach --network scan_net --name vuln-django --rm vuln_django:latest
+      #       - run:
+      #           name: Export Docker image as tar file
+      #           command: docker save vuln_django:latest > image.tar
+      #       - persist_to_workspace:
+      #             root: ~/project
+      #             paths:
+      #               - image.tar
       - deploy-application:
-          requires:
-            - stackhawk/hawkscan-local
+       #   requires:
+        #    - stackhawk/hawkscan-local
