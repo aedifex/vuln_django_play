@@ -59,7 +59,7 @@ jobs:
           command: docker build --no-cache -f Dockerfile -t "chriscircleci/vuln_django:${CIRCLE_SHA1}" .
       - run:
           name: Publish Docker Image
-          command: docker push chriscircleci/vuln_django:test
+          command: docker push chriscircleci/vuln_django:${CIRCLE_SHA1}
       - run:
           name: Install envar utility (envsubst)
           command: sudo apt-get install gettext-base
