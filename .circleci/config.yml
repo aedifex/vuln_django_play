@@ -43,6 +43,9 @@ jobs:
       #    name: Load Docker image from tar file
       #    command: docker load --input image.tar
       - kubernetes/install
+      - run:
+          name: Authenticate Docker Registry
+          command: docker login -u $DOCKER_USER -p $DOCKER_PASS
       - aws-eks/update-kubeconfig-with-authenticator:
           cluster-name: << parameters.cluster-name >>
           aws-region: << parameters.aws-region>>
@@ -53,6 +56,9 @@ jobs:
       - run:
           name: Build Docker Image
           command: docker build --no-cache -f Dockerfile -t "chriscircleci/vuln_django:${CIRCLE_SHA1}" .
+      - run:
+          name: Publish Docker Image
+          command: docker push chriscircleci/vuln_django:test
       - run:
           name: Install envar utility (envsubst)
           command: sudo apt-get install gettext-base
