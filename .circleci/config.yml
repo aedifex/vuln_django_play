@@ -66,6 +66,8 @@ jobs:
       - run:
           name: Update Cluster
           command: |
+            cat yaml/hello-webinar.tmpl | \
+            envsubst > yaml/hello-webinar.yaml && \
             kubectl apply -f yaml/hello-webinar.yaml --validate=false
 
 workflows:
