@@ -83,6 +83,7 @@ workflows:
       #             paths:
       #               - image.tar
       - deploy-application:
+          cluster-name: another-eks-demo
           aws-region: us-west-2
           context: cdk8s
        #   requires:
