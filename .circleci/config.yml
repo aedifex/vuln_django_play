@@ -73,32 +73,32 @@ jobs:
 workflows:
   build-and-scan:
     jobs:
-      # - fossa_test
-      # - stackhawk/hawkscan-local:
-      #     configuration-files: ./stackhawk.yml ./stackhawk-circleci.yml
-      #     docker-network: scan_net
-      #     app-id: a629eeae-4bb9-4918-b3eb-bb141b4e8918
-      #     pre-steps:
-      #       - secrethub/env-export:
-      #           var-name: HAWK_API_KEY
-      #           secret-path: webinar/appsec/stackhawk/api_key
-      #     steps:
-      #       - run:
-      #           name: Build Vulnarable Django
-      #           command: docker build -t vuln_django:latest .
-      #       - run:
-      #           name: Create scan_net Network
-      #           command: docker network create scan_net
-      #       - run:
-      #           name: Run Vulny Django
-      #           command: docker run --detach --network scan_net --name vuln-django --rm vuln_django:latest
-      #       - run:
-      #           name: Export Docker image as tar file
-      #           command: docker save vuln_django:latest > image.tar
-      #       - persist_to_workspace:
-      #             root: ~/project
-      #             paths:
-      #               - image.tar
+      - fossa_test
+      - stackhawk/hawkscan-local:
+          configuration-files: ./stackhawk.yml ./stackhawk-circleci.yml
+          docker-network: scan_net
+          app-id: a629eeae-4bb9-4918-b3eb-bb141b4e8918
+          pre-steps:
+            - secrethub/env-export:
+                var-name: HAWK_API_KEY
+                secret-path: webinar/appsec/stackhawk/api_key
+          steps:
+            - run:
+                name: Build Vulnarable Django
+                command: docker build -t vuln_django:latest .
+            - run:
+                name: Create scan_net Network
+                command: docker network create scan_net
+            - run:
+                name: Run Vulny Django
+                command: docker run --detach --network scan_net --name vuln-django --rm vuln_django:latest
+            - run:
+                name: Export Docker image as tar file
+                command: docker save vuln_django:latest > image.tar
+            - persist_to_workspace:
+                  root: ~/project
+                  paths:
+                    - image.tar
       - deploy-application:
           cluster-name: another-eks-demo
           aws-region: us-west-2
