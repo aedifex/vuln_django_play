@@ -103,5 +103,5 @@ workflows:
           cluster-name: another-eks-demo
           aws-region: us-west-2
           context: cdk8s
-       #   requires:
-        #    - stackhawk/hawkscan-local
+          requires:
+            - stackhawk/hawkscan-local
